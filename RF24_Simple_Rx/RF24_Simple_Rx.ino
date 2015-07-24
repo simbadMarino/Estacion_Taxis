@@ -95,6 +95,7 @@ void setup(void)
   // improve reliability
   radio.setPayloadSize(32);
   radio.setPALevel(RF24_PA_MAX);
+ // radio.setChannel(70);
   radio.enableDynamicPayloads();
   //
   // Open pipes to other nodes for communication
@@ -148,22 +149,19 @@ void nRF_receive(void) {
         }
         else if(flag == 1){
         time2 =  millis() - time1;
-        printf("DiffTime= %d\n\r",time2);
+        
         }
         flag = !flag;
-        //delay(1);
+        delay(5);
       }
   
     RecvPayload[len] = 0; // null terminate string
     
-   // lcd.setCursor(0,0);
-    //lcd.print("R:");
-    Serial.print("R:");
-    //lcd.setCursor(2,0);
-    //lcd.print(RecvPayload);
+
     Serial.print(RecvPayload);
     Serial.println();
-    RecvPayload[0] = 0;  // Clear the buffers
+   // printf("DiffTime= %d\n\r",time2);
+  //  RecvPayload[0] = 0;  // Clear the buffers
   }
 }  
 // vim:cin:ai:sts=2 sw=2 ft=cpp
