@@ -144,14 +144,7 @@ void nRF_receive(void) {
       while ( !done ) {
         len = radio.getDynamicPayloadSize();
         done = radio.read(&RecvPayload,len);
-        if(flag == 0){
-        time1 = millis();
-        }
-        else if(flag == 1){
-        time2 =  millis() - time1;
-        
-        }
-        flag = !flag;
+     
         delay(5);
       }
   
