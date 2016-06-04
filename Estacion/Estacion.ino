@@ -1,32 +1,17 @@
-/*
- Copyright (C) 2011 J. Coliz <maniacbug@ymail.com>
 
- This program is free software; you can redistribute it and/or
- modify it under the terms of the GNU General Public License
- version 2 as published by the Free Software Foundation.
- */
-
-/**
- * Example RF Radio Ping Pair
- *
- * This is an example of how to use the RF24 class.  Write this sketch to two different nodes,
- * connect the role_pin to ground on one.  The ping node sends the current time to the pong node,
- * which responds by sending the value back.  The ping node can then see how long the whole cycle
- * took.
- */
 
 #include <SPI.h>
 #include "nRF24L01.h"
 #include "RF24.h"
 #include "printf.h"
-
+#include <Tone.h>
 //
 // Hardware configuration
 //
 
 // Set up nRF24L01 radio on SPI bus plus pins 9 & 10
-
-RF24 radio(5,4);
+Tone notePlayer[1];
+RF24 radio(8,7);
 
 // sets the role of this unit in hardware.  Connect to GND to be the 'pong' receiver
 // Leave open to be the 'ping' transmitter
@@ -50,7 +35,7 @@ const uint64_t pipes[2] = { 0xF0F0F0F0E1LL, 0xF0F0F0F0D2LL };
 //
 
 // The various roles supported by this sketch
-typedef enum { role_ping_out = 1, role_pong_back } role_e;
+typedef enum { role_sender = 1, role_receiver } role_e;
 
 // The debug-friendly names of those roles
 const char* role_friendly_name[] = { "invalid", "Ping out", "Pong back"};
@@ -58,19 +43,26 @@ const char* role_friendly_name[] = { "invalid", "Ping out", "Pong back"};
 // The role of the current running sketch
 role_e role;
 
+static uint32_t message_count = 0;
+
 
 char SendPayload[31] = "";
 char RecvPayload[31] = "";
 unsigned long time1;
 unsigned long time2;
 boolean flag = 0;
+boolean rfDataflag = 0;
+boolean flagtoto=0;
+String model;
+String swVersion = "SW ver: 1.0 Date: 04/06/2016";
+
 
 void setup(void)
 {
 
-
+//play_OK();
   
-  role = role_pong_back;
+  role = role_receiver;
 
   //
   // Print preamble
@@ -78,11 +70,9 @@ void setup(void)
 
   Serial.begin(115200);
   printf_begin();
-  printf("\n\rRF24/examples/pingpair/\n\r");
-  printf("ROLE: %s\n\r",role_friendly_name[role]);
 
   //
-  // Setup and configure rf radio
+  // Setup and configure rf radio##############################################################################
   //
 
   radio.begin();
@@ -97,16 +87,10 @@ void setup(void)
   radio.setPALevel(RF24_PA_MAX);
  // radio.setChannel(70);
   radio.enableDynamicPayloads();
-  //
-  // Open pipes to other nodes for communication
-  //
 
-  // This simple sketch opens two pipes for these two nodes to communicate
-  // back and forth.
-  // Open 'our' pipe for writing
-  // Open the 'other' pipe for reading, in position #1 (we can have up to 5 pipes open for reading)
+ 
 
-  if ( role == role_ping_out )
+  if ( role == role_sender )
   {
     radio.openWritingPipe(pipes[0]);
     radio.openReadingPipe(1,pipes[1]);
@@ -124,16 +108,28 @@ void setup(void)
   radio.startListening();
 
   //
-  // Dump the configuration of the rf unit for debugging
+  // Dump the confeiguration of the rf unit for debugging
   //
-
+  Serial.println("Odologger Station System");
+  Serial.println(swVersion);
+  Serial.println("");
+  Serial.println("");
   radio.printDetails();
+
+  notePlayer[0].begin(5);
+
+ // play_OK();
+
+
+  //###########################################################################################################
 }
 
 void loop(void)
 {
 
 nRF_receive();
+
+
 }
 
 
@@ -151,10 +147,46 @@ void nRF_receive(void) {
     RecvPayload[len] = 0; // null terminate string
     
 
-    Serial.print(RecvPayload);
-    Serial.println();
-   // printf("DiffTime= %d\n\r",time2);
-  //  RecvPayload[0] = 0;  // Clear the buffers
+   Serial.println(RecvPayload);
+   
+   if(RecvPayload[1] == 'C' && RecvPayload[6] == 'U')
+   {
+    play_OK();
+   }
+   else
+   {
+    play_wrong();
+   }
+   
+   
+
   }
-}  
-// vim:cin:ai:sts=2 sw=2 ft=cpp
+}
+
+
+
+  void play_wrong()
+{
+
+  notePlayer[0].play(NOTE_B2);
+  delay(300);
+  notePlayer[0].stop();
+  delay(100);
+  notePlayer[0].play(NOTE_B2);
+  delay(180);
+  notePlayer[0].stop();
+  delay(100);
+}
+
+void play_OK()
+{
+
+    notePlayer[0].play(NOTE_D4);
+    delay(200);
+    notePlayer[0].play(NOTE_B4);
+    delay(180);
+    notePlayer[0].stop();
+    delay(100);
+}
+
+
