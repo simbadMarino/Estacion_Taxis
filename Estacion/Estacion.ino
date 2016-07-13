@@ -11,7 +11,8 @@
 
 // Set up nRF24L01 radio on SPI bus plus pins 9 & 10
 Tone notePlayer[1];
-RF24 radio(8,7);
+RF24 radio(9,10);   //Uno Estacion
+//RF24 radio(5,4);   //Mega Estacion
 
 // sets the role of this unit in hardware.  Connect to GND to be the 'pong' receiver
 // Leave open to be the 'ping' transmitter
@@ -54,13 +55,13 @@ boolean flag = 0;
 boolean rfDataflag = 0;
 boolean flagtoto=0;
 String model;
-String swVersion = "SW ver: 1.0 Date: 04/06/2016";
-
+String swVersion = "SW ver: 1.1 Date: 12/07/2016";
+int i=0;
 
 void setup(void)
 {
 
-//play_OK();
+
   
   role = role_receiver;
 
@@ -118,8 +119,10 @@ void setup(void)
 
   notePlayer[0].begin(5);
 
- // play_OK();
-
+  play_OK();
+  delay(1000);
+  play_wrong();
+  radio.setAutoAck(false);
 
   //###########################################################################################################
 }
@@ -139,23 +142,50 @@ void nRF_receive(void) {
       bool done = false;
       while ( !done ) {
         len = radio.getDynamicPayloadSize();
-        done = radio.read(&RecvPayload,len);
+        //Serial.println("Length:");      //DEBUG
+        //Serial.println(len);            //DEBUG
+        if(len == 26 || len == 27 || len == 28 )   // Check Lenght of string received( 27 = Chofer & Unidad tags OK, 28 = One tag NOTOK, 29 = 2 tags NOTOK)
+        {
+          radio.setAutoAck(true);
+          done = radio.read(&RecvPayload,len);
+          
+        }
+        else
+        {
+          radio.setAutoAck(false);
+          //Serial.println("Length NOT OK");
+          done = radio.read(&RecvPayload,len);
+          //break;
+          
+        }
      
         delay(5);
+        radio.setAutoAck(false);
       }
   
     RecvPayload[len] = 0; // null terminate string
     
 
-   Serial.println(RecvPayload);
    
-   if(RecvPayload[1] == 'C' && RecvPayload[6] == 'U')
+   
+   if(RecvPayload[1] == 'C' && RecvPayload[6] == 'U' && RecvPayload[11] == 'K' && RecvPayload[18] == 'V' && RecvPayload[22] == 'D')
    {
+   
+    Serial.println(RecvPayload);
     play_OK();
+    for(i=0;i<31;i++)
+    {
+      RecvPayload[i] = 0;
+    }
    }
    else
    {
+    Serial.println(RecvPayload);
     play_wrong();
+     for(i=0;i<31;i++)
+    {
+      RecvPayload[i] = 0;
+    }
    }
    
    
