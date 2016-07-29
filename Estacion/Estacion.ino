@@ -11,8 +11,9 @@
 
 // Set up nRF24L01 radio on SPI bus plus pins 9 & 10
 Tone notePlayer[1];
-RF24 radio(9,10);   //Uno Estacion
-//RF24 radio(5,4);   //Mega Estacion
+//RF24 radio(8,7);   //Uno Estacion Taxi
+//RF24 radio(9,10);  //Estacion debug
+RF24 radio(5,4);   //Mega Estacion
 
 // sets the role of this unit in hardware.  Connect to GND to be the 'pong' receiver
 // Leave open to be the 'ping' transmitter
@@ -55,7 +56,7 @@ boolean flag = 0;
 boolean rfDataflag = 0;
 boolean flagtoto=0;
 String model;
-String swVersion = "SW ver: 1.1 Date: 12/07/2016";
+String swVersion = "SW ver: 1.2 Date: 13/07/2016";
 int i=0;
 
 void setup(void)
@@ -148,6 +149,26 @@ void nRF_receive(void) {
         {
           radio.setAutoAck(true);
           done = radio.read(&RecvPayload,len);
+
+             if(RecvPayload[1] == 'C' && RecvPayload[6] == 'U' && RecvPayload[11] == 'K' && RecvPayload[18] == 'V' && RecvPayload[22] == 'D')
+               {
+               
+                  Serial.println(RecvPayload);
+                  play_OK();
+                  for(i=0;i<31;i++)
+                  {
+                    RecvPayload[i] = 0;
+                  }
+               }
+               else
+               {
+                  Serial.println(RecvPayload);
+                  play_wrong();
+                   for(i=0;i<31;i++)
+                  {
+                    RecvPayload[i] = 0;
+                  }
+               }
           
         }
         else
@@ -168,25 +189,7 @@ void nRF_receive(void) {
 
    
    
-   if(RecvPayload[1] == 'C' && RecvPayload[6] == 'U' && RecvPayload[11] == 'K' && RecvPayload[18] == 'V' && RecvPayload[22] == 'D')
-   {
-   
-    Serial.println(RecvPayload);
-    play_OK();
-    for(i=0;i<31;i++)
-    {
-      RecvPayload[i] = 0;
-    }
-   }
-   else
-   {
-    Serial.println(RecvPayload);
-    play_wrong();
-     for(i=0;i<31;i++)
-    {
-      RecvPayload[i] = 0;
-    }
-   }
+
    
    
 
