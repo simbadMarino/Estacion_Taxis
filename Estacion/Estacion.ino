@@ -12,8 +12,8 @@
 // Set up nRF24L01 radio on SPI bus plus pins 9 & 10
 Tone notePlayer[1];
 //RF24 radio(8,7);   //Uno Estacion Taxi
-//RF24 radio(9,10);  //Estacion debug
-RF24 radio(5,4);   //Mega Estacion
+RF24 radio(9,10);  //Estacion debug
+//RF24 radio(5,4);   //Mega Estacion
 
 // sets the role of this unit in hardware.  Connect to GND to be the 'pong' receiver
 // Leave open to be the 'ping' transmitter
@@ -56,8 +56,18 @@ boolean flag = 0;
 boolean rfDataflag = 0;
 boolean flagtoto=0;
 String model;
-String swVersion = "SW ver: 1.2 Date: 13/07/2016";
+String swVersion = "SW ver: 1.3 Date: 29/07/2016";
+char s_driver[4];
+char s_vehicle[4];
+char s_km[6];
+char s_vueltas[3];
+char s_resets[3];
 int i=0;
+int int_driver= 0;
+int int_vehicle = 0;
+int int_km = 0;
+int int_vueltas = 0;
+int int_resets = 0;
 
 void setup(void)
 {
@@ -120,9 +130,9 @@ void setup(void)
 
   notePlayer[0].begin(5);
 
-  play_OK();
+  play_0km();
   delay(1000);
-  play_wrong();
+  play_wrong_data();
   radio.setAutoAck(false);
 
   //###########################################################################################################
@@ -152,13 +162,70 @@ void nRF_receive(void) {
 
              if(RecvPayload[1] == 'C' && RecvPayload[6] == 'U' && RecvPayload[11] == 'K' && RecvPayload[18] == 'V' && RecvPayload[22] == 'D')
                {
-               
-                  Serial.println(RecvPayload);
-                  play_OK();
-                  for(i=0;i<31;i++)
+                  for(i=0; i < 3; i++)
                   {
-                    RecvPayload[i] = 0;
+                    s_driver[i] = RecvPayload[i+2];
+                    s_vehicle[i] = RecvPayload[i+7];
                   }
+
+                  for(i=0; i < 5; i++)
+                  {
+                    s_km[i] = RecvPayload[i+12];
+                  }
+
+                  for(i = 0; i < 2; i++)
+                  {
+                    s_vueltas[i] = RecvPayload[i+19];
+                    s_resets[i] = RecvPayload[i+23];
+                  }
+                
+                  int_driver = atoi(s_driver);
+                  int_vehicle = atoi(s_vehicle);
+                  int_km = atoi(s_km);
+                  int_vueltas = atoi(s_vueltas);
+                  int_resets = atoi(s_resets);
+                 /* Serial.println(int_driver);  //debug only
+                  Serial.println(int_vehicle);  //debug only
+                  Serial.println(int_km);  //debug only
+                  Serial.println(int_vueltas);  //debug only
+                  Serial.println(int_resets);  //debug only*/
+                  
+                  if(int_driver > 0 && int_driver <= 999 && int_vehicle > 0 && int_vehicle <= 999 &&  int_vueltas >= 0 && int_vueltas < 100 && int_resets >= 0 && int_resets < 100 )
+                  {
+
+                    if(int_km > 1)
+                    {
+                  
+                      Serial.println(RecvPayload);
+                      play_OK();
+                      
+                      for(i=0;i<31;i++)
+                      {
+                        RecvPayload[i] = 0;
+                      }
+                    }
+                    else
+                    {
+                      Serial.println(RecvPayload);
+                      play_0km();
+                      for(i=0;i<31;i++)
+                      {
+                        RecvPayload[i] = 0;
+                      }
+                    }
+                  }
+
+                  else
+                    {
+                      Serial.println(RecvPayload);
+                      play_wrong_data();
+                       for(i=0;i<31;i++)
+                      {
+                        RecvPayload[i] = 0;
+                      }
+                    }
+
+                  
                }
                else
                {
@@ -220,6 +287,35 @@ void play_OK()
     delay(180);
     notePlayer[0].stop();
     delay(100);
+}
+
+void play_0km()
+{
+  notePlayer[0].play(NOTE_B2);
+  delay(120);
+  notePlayer[0].stop();
+  delay(30);
+  notePlayer[0].play(NOTE_B2);
+  delay(120);
+  notePlayer[0].stop();
+  delay(30);
+  notePlayer[0].play(NOTE_B2);
+  delay(120);
+  notePlayer[0].stop();
+  delay(30);
+  
+}
+
+void play_wrong_data()
+{
+   notePlayer[0].play(NOTE_B4);
+    delay(600);
+    notePlayer[0].play(NOTE_D4);
+    delay(280);
+    notePlayer[0].stop();
+    delay(100);
+
+  
 }
 
 
